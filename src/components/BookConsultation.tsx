@@ -1,51 +1,51 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 
-declare global {
-  interface Window {
-    Cal?: any;
+interface CalWindow extends Window {
+  Cal?: {
+    q: unknown[]
+    loaded: boolean
+    ns: Record<string, unknown>
+    init: (args: { origin: string }) => void
+    ui: (args: unknown) => void
+    openModal: (args: { namespace: string }) => void
   }
 }
 
-export default function BookConsultation() {
-  useEffect(() => {
-    (function (C, A, L) {
-      let p = function (a: any, ar: any) {
-        a.q.push(ar);
-      };
-      let d = C.document;
-      C.Cal =
-        C.Cal ||
-        function () {
-          let cal = C.Cal;
-          let ar = arguments;
-          if (!cal.loaded) {
-            cal.ns = {};
-            cal.q = cal.q || [];
-            d.head.appendChild(d.createElement("script")).src = A;
-            cal.loaded = true;
-          }
-          if (ar[0] === L) {
-            const api: any = function () {
-              p(api, arguments);
-            };
-            const namespace = ar[1];
-            api.q = api.q || [];
-            typeof namespace === "string"
-              ? (cal.ns[namespace] = api) && p(api, ar)
-              : p(cal, ar);
-            return;
-          }
-          p(cal, ar);
-        };
-    })(window, "https://app.cal.com/embed/embed.js", "init");
-    window.Cal('init', {origin:'https://app.cal.com'});
+declare const window: CalWindow
 
-    // Important: Replace 'your-cal-username' with your actual Cal.com username
-    window.Cal('ui', {"styles":{"branding":{"brandColor":"#3b82f6"}},"hideEventTypeDetails":false,"layout":"month_view"});
-  }, []);
+const CAL_SCRIPT_URL = "https://app.cal.com/embed/embed.js"
+
+export default function BookConsultation() {
+  const initializeCal = useCallback(() => {
+    const script = document.createElement('script')
+    script.src = CAL_SCRIPT_URL
+    script.onload = () => {
+      if (window.Cal) {
+        window.Cal.init({ origin: 'https://app.cal.com' })
+        window.Cal.ui({
+          styles: { branding: { brandColor: "#3b82f6" } },
+          hideEventTypeDetails: false,
+          layout: "month_view"
+        })
+      }
+    }
+    document.head.appendChild(script)
+  }, [])
+
+  useEffect(() => {
+    if (!window.Cal) {
+      initializeCal()
+    }
+  }, [initializeCal])
+
+  const handleScheduleClick = () => {
+    if (window.Cal) {
+      window.Cal.openModal({ namespace: 'nextgenmvp' })
+    }
+  }
 
   return (
     <section className="py-20 bg-gray-50 dark:bg-gray-700">
@@ -56,7 +56,7 @@ export default function BookConsultation() {
         </p>
         <Button 
           size="lg" 
-          onClick={() => window.Cal('openModal', { namespace: 'nextgenmvp' })}
+          onClick={handleScheduleClick}
           className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
         >
           Schedule Now

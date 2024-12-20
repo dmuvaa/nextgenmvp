@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PhoneIcon as WhatsApp, Mail, Phone, MapPin } from 'lucide-react'
+import { PhoneIcon as WhatsApp, Mail, MapPin } from 'lucide-react'
 
 export default function Contact() {
   return (
